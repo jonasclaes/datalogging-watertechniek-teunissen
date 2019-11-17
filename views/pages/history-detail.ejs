@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>DataloggingWatertechniekTeunissen</title>
+        <% include ../partials/head %>
+    </head>
+    <body>
+        <% include ../partials/navbar %>
+        <div class="container" style="margin-top: 20px;">
+            <div class="row">
+                <div class="col-12">
+                    <h1>Run in detail.</h1>
+                </div>
+                <div class="col-12 text-center" id="loaderColumn">
+                    <span role="status" class="spinner-border text-primary"></span>
+                </div>
+                <div class="col-12" id="dataColumn">
+                    <form>
+                        <div class="form-row">
+                            <div class="col-4">
+                                <div class="form-group">
+                                    <label for="testName">Testnaam:</label>
+                                    <input class="form-control" type="text" name="testName" readonly="" value="">
+                                    <small class="form-text text-muted">Dit is de naam van de test, dit kan niet aangepast worden.</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-group">
+                                    <label for="testDate">Test datum:</label>
+                                    <input class="form-control" type="text" name="testDate" readonly="" value="">
+                                    <small class="form-text text-muted">Dit is de datum van de test, dit kan niet aangepast worden.</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-group">
+                                    <label for="clientName">Klantnaam:</label>
+                                    <input class="form-control" type="text" name="clientName" readonly="" value="">
+                                    <small class="form-text text-muted">Dit is de naam van de klant, dit kan niet aangepast worden.</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-group">
+                                    <label for="pumpInfo">Pomp:</label>
+                                    <input class="form-control" type="text" name="pumpInfo" readonly="" value="">
+                                    <small class="form-text text-muted">Dit is de info over de pomp, dit kan niet aangepast worden.</small>
+                                </div>
+                            </div>
+                            <div class="col-8" style="display: none;">
+                                <div class="form-group">
+                                    <label for="rawData">Ruwe data:</label>
+                                    <textarea class="form-control form-control-lg" name="rawData" readonly style="padding: 8px 16px;" rows="6"></textarea>
+                                    <small class="form-text text-muted">Dit is de ruwe test data, dit kan niet aangepast worden.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-12" id="buttonColumn">
+                    <button class="btn btn-danger" type="button" style="margin-right: 10px;margin-bottom: 10px;" id="btnDelete">Verwijder run</button>
+                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;">Exporteer PDF</button>
+                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;">Exporteer grafiek als afbeelding</button>
+                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;">Exporteer Excel-CSV</button>
+                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;">Exporteer alles als gezipt bestand</button>
+                </div>
+            </div>
+        </div>
+        <% include ../partials/script %>
+    </body>
+    <script>
+        const parsedUrl = new URL(window.location.href);
+        const id = parsedUrl.searchParams.get("id");
+        const debug = parsedUrl.searchParams.get("debug") !== "true" ? false : true;
+
+        const sleep = (milliseconds) => {
+            return new Promise(resolve => setTimeout(resolve, milliseconds));
+        };
+
+        const spinner = function () {
+            this.start = function () {
+                $("#loaderColumn").show();
+                $("#dataColumn").hide();
+                $("#buttonColumn").hide();
+            }
+
+            this.stop = function () {
+                $("#loaderColumn").hide();
+                $("#dataColumn").show();
+                $("#buttonColumn").show();
+            };
+
+            return this;
+        }
+
+        const loader = spinner();
+
+        async function loadData(id) {
+            try {
+                loader.start();
+
+                await sleep(300);
+                const itemResponse = await fetch(`http://localhost:3000/api/history/detail?id=${id}`);
+                const itemJSON = await itemResponse.json();
+
+                debug ? console.debug(itemJSON) : false;
+
+                $("input[name=testName]").val(itemJSON.data[0].name);
+                $("input[name=testDate]").val(new Date(itemJSON.data[0].date).toLocaleString("nl-NL"));
+                $("input[name=clientName]").val(itemJSON.data[0].client);
+                $("input[name=pumpInfo]").val(itemJSON.data[0].pump);
+
+                if (itemJSON.data[0].data) {
+                    $("textarea[name=rawData]").val(itemJSON.data[0].data.toSource());
+                }
+                
+                debug ? $("textarea[name=rawData]").parent().parent().show() : false;
+
+                loader.stop();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        if (id) {
+            loadData(id);
+        }
+
+        $("#btnDelete").on("click", async function () {
+            const itemResponse = await fetch(`http://localhost:3000/api/history`, {
+                method: "DELETE",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: id
+                })
+            });
+            const itemJSON = await itemResponse.json();
+
+            debug ? console.debug(itemJSON) : false;
+
+            const referenceURL = new URL("/user/history", parsedUrl);
+            window.location.href = referenceURL;
+        });
+    </script>
+</html>

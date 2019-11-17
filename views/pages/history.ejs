@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>DataloggingWatertechniekTeunissen</title>
+        <% include ../partials/head %>
+    </head>
+    <body>
+        <% include ../partials/navbar %>
+        <div class="container" style="margin-top: 20px;">
+            <div class="row">
+                <div class="col-12">
+                    <h1>Geschiedenis.</h1>
+                </div>
+                <div class="col-12" id="searchColumn">
+                    <form id="searchForm" method="POST" action="">
+                        <div class="form-group">
+                            <label for="searchInput">Zoeken op testnaam:</label>
+                            <div class="input-group input-group-sm">
+                                <input class="form-control" type="text" placeholder="voorbeeld" name="searchInput" autocomplete="off">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit">Zoek</button>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">Zoek op testnaam, deze zoekopdracht zoekt of de testnaam de waarde van dit veld bevat.</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-12" id="runColumn">
+                </div>
+                <div class="col-12 text-center" id="loaderColumn">
+                    <span role="status" class="spinner-border text-primary"></span>
+                </div>
+                <div class="col-12 text-center" id="noResultsColumn">
+                    <p>Nog geen resultaten.</p>
+                </div>
+                <div class="col" id="paginationColumn">
+                    <nav>
+                        <ul class="pagination" id="ulPagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        <!-- Error modal -->
+        <div class="modal fade" role="dialog" tabindex="-1" id="modalError">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title text-danger">
+                            <i class="fa fa-exclamation-triangle"></i>&nbsp;Fout</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                    <div class="modal-body">
+                        <p>Er heeft zich een fout voorgedaan, gelieve de voorgaande actie opnieuw te proberen. Indien dit na enkele keren nog steeds niet lukt, contacteer dan de support.</p>
+                        <code></code>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" type="button" onclick="closeErrorModal()">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End error modal -->
+        <% include ../partials/script %>
+    </body>
+    <script>
+        /*
+        * This is a big fuckery. This code has been written
+        * on a very quick base of time. It contains lots
+        * of test material, that's why it's so fucked. It
+        * works, but should not be used anywhere else.
+        */
+        const parsedUrl = new URL(window.location.href);
+        const debug = parsedUrl.searchParams.get("debug") !== "true" ? false : true;
+
+        const sleep = (milliseconds) => {
+            return new Promise(resolve => setTimeout(resolve, milliseconds));
+        };
+
+        $("#noResultsColumn").hide();
+        $("#searchColumn").hide();
+
+        let currentPage = 1;
+
+        if (parsedUrl.searchParams.get("page")) {
+            currentPage = parseInt(parsedUrl.searchParams.get("page"));
+        }
+
+        let previousSearchInput = "";
+
+        async function loadData(page) {
+            try {
+                const searchFieldText = $("input[name=searchInput]").val();
+                
+                if (previousSearchInput != searchFieldText) {
+                    currentPage = 1;
+                    parsedUrl.searchParams.set("page", 1);
+                    window.history.pushState("", "DataloggingWatertechniekTeunissen", parsedUrl);
+                }
+
+                const limit = 5;
+
+                if (page) {
+                    currentPage = page;
+                    parsedUrl.searchParams.set("page", page);
+                    window.history.pushState("", "DataloggingWatertechniekTeunissen", parsedUrl);
+                }
+
+                clearRuns();
+                clearPagination();
+
+                $("#loaderColumn").show();
+
+                await sleep(300);
+                const itemResponse = await fetch(`http://localhost:3000/api/history?name=${searchFieldText}&limit=${limit}&offset=${(currentPage - 1) * limit}`);
+                const itemJSON = await itemResponse.json();
+
+                debug ? console.debug(itemJSON) : false;
+
+                $("#loaderColumn").hide();
+
+                if (itemJSON.err) {
+                    // Prepare dialog.
+                    $("#modalError .modal-body code").text(`${JSON.stringify(itemJSON.err)}`);
+
+                    // Show dialog.
+                    $("#modalError").modal("show");
+
+                    $("#noResultsColumn").show();
+                    console.error(itemJSON.err);
+
+                } else {
+                    if (itemJSON.totalRows === 0) {
+                        $("#noResultsColumn").show();
+                    } else {
+                        $("#searchColumn").show();
+                        addRuns(itemJSON.data);
+                        calculatePagination(itemJSON.totalRows, itemJSON.limit);
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function calculatePagination(total, amountPerPage) {
+            const pages = Math.ceil(total / amountPerPage);
+
+            let pageIncrements = 1;
+
+            if (pages > 10) {
+                pageIncrements = 5;
+            }
+
+            let previousPage = currentPage;
+            let nextPage = currentPage;
+
+            if (currentPage - 1 > 0) {
+                previousPage = currentPage - 1;
+            }
+
+            if (currentPage + 1 <= pages) {
+                nextPage = currentPage + 1;
+            }
+
+            clearPagination();
+
+            $("#ulPagination").append(`
+                <li class="page-item"><button class="page-link" aria-label="Previous" onclick="loadData(${previousPage});"><span aria-hidden="true">«</span></button></li>
+            `);
+
+            for (let pageNumber = 1; pageNumber <= pages; pageNumber += pageIncrements) {
+                if (currentPage == pageNumber) {
+                    $("#ulPagination").append(`
+                        <li class="page-item active"><button class="page-link" onclick="loadData(${pageNumber});">${pageNumber}</button></li>
+                    `);
+                } else {
+                    $("#ulPagination").append(`
+                        <li class="page-item"><button class="page-link" onclick="loadData(${pageNumber});">${pageNumber}</button></li>
+                    `);
+                }
+            }
+
+            $("#ulPagination").append(`
+                <li class="page-item"><button class="page-link" aria-label="Next" onclick="loadData(${nextPage});"><span aria-hidden="true">»</span></button></li>
+            `);
+        }
+
+        function clearPagination() {
+            $("#ulPagination").html("");
+        }
+
+        function addRuns(runs) {
+            clearRuns();
+
+            for (let run of runs) {
+                $("#runColumn").append(`
+                    <div class="card" style="margin-bottom: 10px;">
+                        <div class="card-body">
+                            <h4 class="card-title">${run.name} - ${new Date(run.date).toLocaleString("nl-NL")}</h4>
+                            <h6 class="text-muted card-subtitle mb-2">Klant: ${run.client}</h6>
+                            <p class="card-text">Pomp info: ${run.pump}</p>
+                            <a class="btn btn-primary btn-sm" role="button" href="/user/history/detail?id=${run.id}">Bekijk resultaten</a>
+                        </div>
+                    </div>
+                `)
+            }
+        }
+
+        function clearRuns() {
+            $("#runColumn").html("");
+        }
+
+        $(document).ready(function () {
+            loadData();
+        });
+
+        $("#searchForm").on("submit", function (event) {
+            event.preventDefault();
+
+            loadData();
+        });
+
+        let typingTimer;
+
+        $("input[name=searchInput]").keyup(function (event) {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(loadData, 350);
+        });
+
+        function closeErrorModal() {
+            $("#modalError").modal("hide");
+            $("#modalError .modal-body code").text(``);
+        }
+    </script>
+</html>
