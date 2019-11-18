@@ -151,7 +151,7 @@ export class Machine extends EventEmitter {
         const pdfEmptyChart = "EmptyChart.pdf";
         const pdfChartName = "chart.pdf";
         const execPromise = promisify(exec);
-        const { stdout, stderr } = await execPromise(`java -jar ${process.env.GRAPHER_JAR} ${id} "${chartName}" "${path.join(process.env.GRAPHER_WORKDIR || "", imageName)}" "${path.join(process.env.GRAPHER_WORKDIR || "", pdfEmptyChart)}" "${path.join(process.env.GRAPHER_WORKDIR || "", pdfChartName)}"`);
+        const { stdout, stderr } = await execPromise(`java -jar ${process.env.GRAPHER_JAR} ${id} "${chartName}" "${path.join(process.env.GRAPHER_WORKDIR || "", imageName)}" "${path.join(process.env.GRAPHER_WORKDIR || "", pdfEmptyChart)}" "${path.join(process.env.GRAPHER_WORKDIR || "", pdfChartName)}" "jdbc:postgresql://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_DATABASE}" "${process.env.DB_USER}" "${process.env.DB_PASSWORD}"`);
 
         const imageBuffer = fs.readFileSync(path.join(process.env.GRAPHER_WORKDIR || "", imageName));
         const pdfBuffer = fs.readFileSync(path.join(process.env.GRAPHER_WORKDIR || "", pdfChartName));
