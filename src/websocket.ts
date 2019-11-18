@@ -19,6 +19,7 @@ wss.on("connection", (ws: WebSocket) => {
                 instruction === "machine.reset" ? await machine.reset() : false;
                 instruction === "machine.start" ? await machine.start() : false;
                 instruction === "machine.abort" ? await machine.abort() : false;
+                instruction === "machine.debug.processGraph" ? await machine.processGraph(data.id) : false;
                 instruction === "data.saved" ? await machine.processGraph(data.id) : false;
             }
         } catch (err) {

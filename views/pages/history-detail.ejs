@@ -57,10 +57,10 @@
                 </div>
                 <div class="col-12" id="buttonColumn">
                     <button class="btn btn-danger" type="button" style="margin-right: 10px;margin-bottom: 10px;" id="btnDelete">Verwijder run</button>
-                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;">Exporteer PDF</button>
-                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;">Exporteer grafiek als afbeelding</button>
-                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;">Exporteer Excel-CSV</button>
-                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;">Exporteer alles als gezipt bestand</button>
+                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;" id="exportPDF">Exporteer PDF</button>
+                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;" id="exportImage">Exporteer grafiek als afbeelding</button>
+                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;" id="exportCSV">Exporteer Excel-CSV</button>
+                    <button class="btn btn-primary" type="button" style="margin-right: 10px;margin-bottom: 10px;" id="exportZIP">Exporteer alles als gezipt bestand</button>
                 </div>
             </div>
         </div>
@@ -143,5 +143,112 @@
             const referenceURL = new URL("/user/history", parsedUrl);
             window.location.href = referenceURL;
         });
+
+        $("#exportPDF").on("click", async () => {
+            try {
+                debug ? console.debug("Export PDF button pressed") : false;
+
+                const filesResponse = await fetch(`http://localhost:3000/api/file?run_id=${id}`);
+                const filesJSON = await filesResponse.json();
+
+                debug ? console.debug(filesJSON) : false;
+
+                for (file of filesJSON.data) {
+                    if (file.type === "PDF") {
+                        debug ? console.debug(file) : false;
+
+                        // Get Buffer from data.
+                        const byteData = hexToBytes(file.data);
+                        const data = new Uint8Array(byteData);
+                        const blob = new Blob([data], { type: "application/pdf" });
+
+                        let link = document.createElement("a");
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = file.name;
+                        link.click();
+
+                        debug ? console.debug(data) : false;
+                    }
+                }
+
+                debug ? console.debug("Exported PDF") : false;
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        $("#exportImage").on("click", async () => {
+            try {
+                debug ? console.debug("Export image button pressed") : false;
+                
+                const filesResponse = await fetch(`http://localhost:3000/api/file?run_id=${id}`);
+                const filesJSON = await filesResponse.json();
+
+                debug ? console.debug(filesJSON) : false;
+
+                for (file of filesJSON.data) {
+                    if (file.type === "IMAGE") {
+                        debug ? console.debug(file) : false;
+
+                        // Get Buffer from data.
+                        const byteData = hexToBytes(file.data);
+                        const data = new Uint8Array(byteData);
+                        const blob = new Blob([data], { type: "application/jpeg" });
+
+                        let link = document.createElement("a");
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = file.name;
+                        link.click();
+
+                        debug ? console.debug(data) : false;
+                    }
+                }
+
+                debug ? console.debug("Exported image") : false;
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        $("#exportCSV").on("click", async () => {
+            try {
+                debug ? console.debug("Export CSV button pressed") : false;
+                
+                const filesResponse = await fetch(`http://localhost:3000/api/file?run_id=${id}`);
+                const filesJSON = await filesResponse.json();
+
+                debug ? console.debug(filesJSON) : false;
+
+                for (file of filesJSON.data) {
+                    if (file.type === "CSV") {
+                        debug ? console.debug(file) : false;
+
+                        // Get Buffer from data.
+                        const byteData = hexToBytes(file.data);
+                        const data = new Uint8Array(byteData);
+                        const blob = new Blob([data], { type: "application/csv" });
+
+                        let link = document.createElement("a");
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = file.name;
+                        link.click();
+
+                        debug ? console.debug(data) : false;
+                    }
+                }
+
+                debug ? console.debug("Exported CSV") : false;
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        function hexToBytes(hex) {
+            for (var bytes = [], c = 0; c < hex.length; c += 2) {
+                bytes.push(parseInt(hex.substr(c, 2), 16));
+            }
+
+            return bytes;
+        }
     </script>
 </html>

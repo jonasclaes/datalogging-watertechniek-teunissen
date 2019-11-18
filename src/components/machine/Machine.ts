@@ -4,7 +4,9 @@ import { IReading } from "./IReading";
 import { PLC } from "../plc";
 import { promisify } from "util";
 import { exec } from "child_process";
-import { join } from "path";
+import { default as path } from "path";
+import { file, EFileType } from "../file";
+import { default as fs } from "fs";
 
 export class Machine extends EventEmitter {
     private status: EStatus;
@@ -142,20 +144,21 @@ export class Machine extends EventEmitter {
         this.reportStatus(this.status);
     }
 
-    public async processGraph(id: Number) {
+    public async processGraph(id: number) {
         // Generate a new chart from the data.
         const chartName = "Pump Performance Curve";
         const imageName = "chart.jpeg";
         const pdfEmptyChart = "EmptyChart.pdf";
-        const pdfChart = "chart.pdf";
+        const pdfChartName = "chart.pdf";
         const execPromise = promisify(exec);
-        const { stdout, stderr } = await execPromise(`java -jar ${process.env.GRAPHER_JAR} ${id} "${chartName}" "${join(process.env.GRAPHER_WORKDIR || "", imageName)}" "${join(process.env.GRAPHER_WORKDIR || "", pdfEmptyChart)}" "${join(process.env.GRAPHER_WORKDIR || "", pdfChart)}"`);
+        const { stdout, stderr } = await execPromise(`java -jar ${process.env.GRAPHER_JAR} ${id} "${chartName}" "${path.join(process.env.GRAPHER_WORKDIR || "", imageName)}" "${path.join(process.env.GRAPHER_WORKDIR || "", pdfEmptyChart)}" "${path.join(process.env.GRAPHER_WORKDIR || "", pdfChartName)}"`);
+
+        const imageBuffer = fs.readFileSync(path.join(process.env.GRAPHER_WORKDIR || "", imageName));
+        const pdfBuffer = fs.readFileSync(path.join(process.env.GRAPHER_WORKDIR || "", pdfChartName));
 
         // Save the chart to the database.
-        // TODO: SAVE CHART TO DATABASE.
-
-        
-
+        file.create(id, imageName, imageBuffer.toString("hex"), EFileType.IMAGE);
+        file.create(id, pdfChartName, pdfBuffer.toString("hex"), EFileType.PDF);
 
         // Set status to finished and report the status.
         this.status = EStatus.FINISHED;

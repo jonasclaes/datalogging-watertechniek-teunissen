@@ -1,6 +1,6 @@
 export const enum EFileType {
-    PDF,
-    IMAGE,
-    CSV,
-    OTHER
+    PDF="PDF",
+    IMAGE="IMAGE",
+    CSV="CSV",
+    OTHER="OTHER"
 }
