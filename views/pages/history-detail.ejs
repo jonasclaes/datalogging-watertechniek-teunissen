@@ -157,9 +157,13 @@
                     if (file.type === "PDF") {
                         debug ? console.debug(file) : false;
 
-                        // Get Buffer from data.
+                        // Get bytes from hex.
                         const byteData = hexToBytes(file.data);
+
+                        // Create bytearray.
                         const data = new Uint8Array(byteData);
+
+                        // Create Blob.
                         const blob = new Blob([data], { type: "application/pdf" });
 
                         let link = document.createElement("a");
@@ -190,9 +194,13 @@
                     if (file.type === "IMAGE") {
                         debug ? console.debug(file) : false;
 
-                        // Get Buffer from data.
+                        // Get bytes from hex.
                         const byteData = hexToBytes(file.data);
+
+                        // Create bytearray.
                         const data = new Uint8Array(byteData);
+
+                        // Create Blob.
                         const blob = new Blob([data], { type: "application/jpeg" });
 
                         let link = document.createElement("a");
@@ -223,9 +231,13 @@
                     if (file.type === "CSV") {
                         debug ? console.debug(file) : false;
 
-                        // Get Buffer from data.
+                        // Get bytes from hex.
                         const byteData = hexToBytes(file.data);
+
+                        // Create bytearray.
                         const data = new Uint8Array(byteData);
+
+                        // Create Blob.
                         const blob = new Blob([data], { type: "application/csv" });
 
                         let link = document.createElement("a");
