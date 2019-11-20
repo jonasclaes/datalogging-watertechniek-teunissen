@@ -7,6 +7,7 @@ import { exec } from "child_process";
 import { default as path } from "path";
 import { file, EFileType } from "../file";
 import { default as fs } from "fs";
+import { history } from "../history";
 
 export class Machine extends EventEmitter {
     private status: EStatus;
@@ -153,12 +154,33 @@ export class Machine extends EventEmitter {
         const execPromise = promisify(exec);
         const { stdout, stderr } = await execPromise(`java -jar ${process.env.GRAPHER_JAR} ${id} "${chartName}" "${path.join(process.env.GRAPHER_WORKDIR || "", imageName)}" "${path.join(process.env.GRAPHER_WORKDIR || "", pdfEmptyChart)}" "${path.join(process.env.GRAPHER_WORKDIR || "", pdfChartName)}" "jdbc:postgresql://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_DATABASE}" "${process.env.DB_USER}" "${process.env.DB_PASSWORD}"`);
 
+        // Read data from outputfolder.
         const imageBuffer = fs.readFileSync(path.join(process.env.GRAPHER_WORKDIR || "", imageName));
         const pdfBuffer = fs.readFileSync(path.join(process.env.GRAPHER_WORKDIR || "", pdfChartName));
 
         // Save the chart to the database.
         file.create(id, imageName, imageBuffer.toString("hex"), EFileType.IMAGE);
         file.create(id, pdfChartName, pdfBuffer.toString("hex"), EFileType.PDF);
+
+        // Create a CSV file.
+        // We are implementing a comma seperated list.
+        // Structure is as following.
+        // Field 0: datapoint
+        // Field 1: flow
+        // Field 2: pressure
+        const runData = await history.readbyId(id);
+        let csvString = "datapoint,flow,pressure\n";
+
+        // Add run results to CSV.
+        for (let run of runData[0].data) {
+            csvString += `${run[0]},${run[1]},${run[2]}\n`;
+        }
+
+        // Standardize string for saving.
+        const csvBuffer = Buffer.from(csvString);
+
+        // Save buffer.
+        file.create(id, "run.csv", csvBuffer.toString("hex"), EFileType.CSV);
 
         // Set status to finished and report the status.
         this.status = EStatus.FINISHED;
