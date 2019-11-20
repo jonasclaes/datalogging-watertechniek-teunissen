@@ -68,6 +68,7 @@
     </body>
     <script>
         const parsedUrl = new URL(window.location.href);
+        const connUrl = `${parsedUrl.protocol}//${parsedUrl.host}`;
         const id = parsedUrl.searchParams.get("id");
         const debug = parsedUrl.searchParams.get("debug") !== "true" ? false : true;
 
@@ -98,7 +99,7 @@
                 loader.start();
 
                 await sleep(300);
-                const itemResponse = await fetch(`http://localhost:3000/api/history/detail?id=${id}`);
+                const itemResponse = await fetch(`${connUrl}/api/history/detail?id=${id}`);
                 const itemJSON = await itemResponse.json();
 
                 debug ? console.debug(itemJSON) : false;
@@ -125,7 +126,7 @@
         }
 
         $("#btnDelete").on("click", async function () {
-            const itemResponse = await fetch(`http://localhost:3000/api/history`, {
+            const itemResponse = await fetch(`${connUrl}/api/history`, {
                 method: "DELETE",
                 mode: "cors",
                 cache: "no-cache",
@@ -148,7 +149,7 @@
             try {
                 debug ? console.debug("Export PDF button pressed") : false;
 
-                const filesResponse = await fetch(`http://localhost:3000/api/file?run_id=${id}`);
+                const filesResponse = await fetch(`${connUrl}/api/file?run_id=${id}`);
                 const filesJSON = await filesResponse.json();
 
                 debug ? console.debug(filesJSON) : false;
@@ -183,7 +184,7 @@
             try {
                 debug ? console.debug("Export image button pressed") : false;
                 
-                const filesResponse = await fetch(`http://localhost:3000/api/file?run_id=${id}`);
+                const filesResponse = await fetch(`${connUrl}/api/file?run_id=${id}`);
                 const filesJSON = await filesResponse.json();
 
                 debug ? console.debug(filesJSON) : false;
@@ -218,7 +219,7 @@
             try {
                 debug ? console.debug("Export CSV button pressed") : false;
                 
-                const filesResponse = await fetch(`http://localhost:3000/api/file?run_id=${id}`);
+                const filesResponse = await fetch(`${connUrl}/api/file?run_id=${id}`);
                 const filesJSON = await filesResponse.json();
 
                 debug ? console.debug(filesJSON) : false;

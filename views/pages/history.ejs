@@ -73,6 +73,7 @@
         * works, but should not be used anywhere else.
         */
         const parsedUrl = new URL(window.location.href);
+        const connUrl = `${parsedUrl.protocol}//${parsedUrl.host}`;
         const debug = parsedUrl.searchParams.get("debug") !== "true" ? false : true;
 
         const sleep = (milliseconds) => {
@@ -114,7 +115,7 @@
                 $("#loaderColumn").show();
 
                 await sleep(300);
-                const itemResponse = await fetch(`http://localhost:3000/api/history?name=${searchFieldText}&limit=${limit}&offset=${(currentPage - 1) * limit}`);
+                const itemResponse = await fetch(`${connUrl}/api/history?name=${searchFieldText}&limit=${limit}&offset=${(currentPage - 1) * limit}`);
                 const itemJSON = await itemResponse.json();
 
                 debug ? console.debug(itemJSON) : false;

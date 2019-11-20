@@ -92,6 +92,7 @@
     </body>
     <script>
         const parsedUrl = new URL(window.location.href);
+        const connUrl = `${parsedUrl.protocol}//${parsedUrl.host}`;
         const debug = parsedUrl.searchParams.get("debug") !== "true" ? false : true;
         const socket = new WebSocket("ws://" + parsedUrl.host);
 
@@ -222,7 +223,7 @@
 
         async function saveRun() {
             try {
-                const itemResponse = await fetch(`http://localhost:3000/api/history`, {
+                const itemResponse = await fetch(`${connUrl}/api/history`, {
                     method: "POST",
                     mode: "cors",
                     cache: "no-cache",
