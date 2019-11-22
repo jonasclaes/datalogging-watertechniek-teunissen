@@ -1,0 +1,11 @@
+name: Datalogging Watertechniek Teunissen
+
+on: [push]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: build
+        run: npm run build
