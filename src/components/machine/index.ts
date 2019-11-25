@@ -5,3 +5,4 @@ export const machine = new Machine();
 export { Machine } from "./Machine";
 export { EStatus } from "./EStatus";
 export { IReading } from "./IReading";
+export { IData } from "./IData";

@@ -4,7 +4,7 @@ import { wss } from "./server";
 /**
  * Import components.
  */
-import { machine, Machine, EStatus, IReading } from "./components/machine";
+import { machine, Machine, EStatus, IReading, IData } from "./components/machine";
 
 wss.on("connection", (ws: WebSocket) => {
     ws.on("message", async (message: string) => {
@@ -21,6 +21,7 @@ wss.on("connection", (ws: WebSocket) => {
                 instruction === "machine.abort" ? await machine.abort() : false;
                 instruction === "machine.debug.processGraph" ? await machine.processGraph(data.id) : false;
                 instruction === "data.saved" ? await machine.processGraph(data.id) : false;
+                instruction === "data.getCurrent" ? machine.getCurrentData() : false;
             }
         } catch (err) {
             console.error(err);
@@ -28,20 +29,24 @@ wss.on("connection", (ws: WebSocket) => {
     });
 
     machine.on("status", (status: EStatus) => {
-        const statusResponse = JSON.stringify({
+        const statusObject: IData = {
             instruction: "status",
             data: status
-        });
+        };
 
-        ws.send(statusResponse);
+        ws.send(JSON.stringify(statusObject));
     });
 
     machine.on("reading", (reading: IReading) => {
-        const statusResponse = JSON.stringify({
+        const statusObject: IData = {
             instruction: "reading",
             data: reading
-        });
+        }
 
-        ws.send(statusResponse);
+        ws.send(JSON.stringify(statusObject));
+    });
+
+    machine.on("data", (data: IData) => {
+        ws.send(JSON.stringify(data));
     });
 });

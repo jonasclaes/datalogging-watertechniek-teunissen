@@ -124,6 +124,7 @@
             if (instruction !== undefined && data !== undefined) {
                 instruction === "status" ? handleStatus(data) : false;
                 instruction === "reading" ? handleReading(data) : false;
+                instruction === "currentData" ? handleCurrentData(data) : false;
             }
         });
 
@@ -192,6 +193,10 @@
             readingCount += 1;
         };
 
+        const handleCurrentData = (currData) => {
+            data.data = currData;
+        };
+
         const sleep = (milliseconds) => {
             return new Promise(resolve => setTimeout(resolve, milliseconds));
         };
@@ -247,5 +252,9 @@
         function closeErrorModal() {
             $("#modalError").modal("hide");
         }
+
+        $(document).ready(() => {
+            sendInstruction("data.getCurrent");
+        });
     </script>
 </html>

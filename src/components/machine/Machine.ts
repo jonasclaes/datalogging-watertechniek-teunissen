@@ -8,10 +8,12 @@ import { default as path } from "path";
 import { file, EFileType } from "../file";
 import { default as fs } from "fs";
 import { history } from "../history";
+import { IData } from "./IData";
 
 export class Machine extends EventEmitter {
     private status: EStatus;
     private plc: PLC;
+    private currentReadingBuffer: Array<any>;
 
     constructor () {
         super();
@@ -26,6 +28,9 @@ export class Machine extends EventEmitter {
             slot: parseInt(process.env.PLC_SLOT || "1")
         });
 
+        // Create an empty buffer.
+        this.currentReadingBuffer = [];
+
         // Define our variable synonyms.
         this.plc.addItemSynonym("start", "DB1,X0.0");
         this.plc.addItemSynonym("stop", "DB1,X0.1");
@@ -38,6 +43,16 @@ export class Machine extends EventEmitter {
      */
     getStatus(): EStatus {
         return this.status;
+    }
+
+    /**
+     * Get the current data.
+     */
+    getCurrentData(): IData {
+        return {
+            instruction: "currentData",
+            data: this.currentReadingBuffer
+        }
     }
 
     /**
@@ -70,6 +85,9 @@ export class Machine extends EventEmitter {
             // Connect to PLC.
             await this.plc.connect();
 
+            // Clear the current reading buffer.
+            this.currentReadingBuffer = [];
+
             // Wait until the start command has been given from the PLC.
             await this.plc.addItemTimer("start", true, 500);
             this.status = EStatus.RUNNING;
@@ -79,6 +97,8 @@ export class Machine extends EventEmitter {
             // In the meanwhile, report a reading each time it changes.
             await new Promise(resolve => {
                 this.plc.addReadItems(["stop", "measuredPressure", "measuredFlow"]);
+
+                let currentReading = 0;
 
                 // Define a reading object according to it's interface.
                 let prevValues: IReading = {
@@ -97,10 +117,13 @@ export class Machine extends EventEmitter {
                     }
 
                     // Check if values have changed.
-                    if (items["measuredPressure"] !== prevValues.pressure || items["measuredFlow"] !== prevValues.flowrate) {
+                    if (items["measuredPressure"] !== prevValues.pressure && items["measuredFlow"] !== prevValues.flowrate) {
                         prevValues.pressure = items["measuredPressure"];
                         prevValues.flowrate = items["measuredFlow"];
                         this.reportReading(prevValues);
+
+                        this.currentReadingBuffer.push([currentReading, prevValues.pressure, prevValues.flowrate]);
+                        currentReading += 1;
                     }
                 }, 100);
             });
@@ -115,6 +138,9 @@ export class Machine extends EventEmitter {
         } finally {
             // Always disconnect from the PLC.
             await this.plc.disconnect();
+
+            // Always clear the buffer.
+            this.currentReadingBuffer = [];
         }
     }
 
