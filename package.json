@@ -2,11 +2,12 @@
   "name": "datalogging-watertechniek-teunissen",
   "version": "1.0.0",
   "description": "Datalogger",
-  "main": "server.js",
+  "main": "./dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\"",
     "dev": "tsc-watch --onSuccess \"node ./dist/server.js\"",
-    "build": "tsc"
+    "build": "tsc",
+    "start": "node ./dist/server.js"
   },
   "author": "Jonas Claes <jonasclaes2001@outlook.com>",
   "license": "ISC",

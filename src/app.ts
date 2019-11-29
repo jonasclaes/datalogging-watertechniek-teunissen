@@ -42,4 +42,8 @@ app.use("/", express.static(path.join(__dirname, "../public")));
 app.use("/user", userRouter);
 app.use("/api", apiRouter);
 
+app.get("/", (req: Request, res: Response) => {
+    res.redirect("/user");
+});
+
 export default app;
