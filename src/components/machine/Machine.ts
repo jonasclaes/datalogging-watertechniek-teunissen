@@ -32,23 +32,23 @@ export class Machine extends EventEmitter {
         this.currentReadingBuffer = [];
 
         // Define our variable synonyms.
-        this.plc.addItemSynonym("start", "DB1,X0.0");
-        this.plc.addItemSynonym("stop", "DB1,X0.1");
-        this.plc.addItemSynonym("measuredPressure", "DB1,REAL2");
-        this.plc.addItemSynonym("measuredFlow", "DB1,REAL6");
+        this.plc.addItemSynonym("start", `DB${process.env.PLC_DB || "100"},X0.0`);
+        this.plc.addItemSynonym("stop", `DB${process.env.PLC_DB || "100"},X0.1`);
+        this.plc.addItemSynonym("measuredPressure", `DB${process.env.PLC_DB || "100"},REAL2`);
+        this.plc.addItemSynonym("measuredFlow", `DB${process.env.PLC_DB || "100"},REAL6`);
     }
 
     /**
      * Get the current status.
      */
-    getStatus(): EStatus {
+    public getStatus(): EStatus {
         return this.status;
     }
 
     /**
      * Get the current data.
      */
-    getCurrentData(): IData {
+    public getCurrentData(): IData {
         return {
             instruction: "currentData",
             data: this.currentReadingBuffer
@@ -89,7 +89,7 @@ export class Machine extends EventEmitter {
             this.currentReadingBuffer = [];
 
             // Wait until the start command has been given from the PLC.
-            await this.plc.addItemTimer("start", true, 500);
+            await this.plc.addItemTimer("start", true, 250);
             this.status = EStatus.RUNNING;
             this.reportStatus(this.status);
 
@@ -118,7 +118,7 @@ export class Machine extends EventEmitter {
 
                     // Check if values have changed.
                     if (items["measuredPressure"] !== prevValues.pressure && items["measuredFlow"] !== prevValues.flowrate) {
-                        prevValues.pressure = items["measuredPressure"];
+                        prevValues.pressure = items["measuredPressure"] >= 0 ? items["measuredPressure"] : 0;
                         prevValues.flowrate = items["measuredFlow"];
                         this.reportReading(prevValues);
 

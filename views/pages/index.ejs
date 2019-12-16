@@ -114,6 +114,7 @@
             debug ? console.debug(`WebSocket connected to ${event.currentTarget.url}`) : false;
 
             sendInstruction("machine.report_status");
+            sendInstruction("data.getCurrent");
         });
 
         socket.addEventListener("message", function(event) {
@@ -252,9 +253,5 @@
         function closeErrorModal() {
             $("#modalError").modal("hide");
         }
-
-        $(document).ready(() => {
-            sendInstruction("data.getCurrent");
-        });
     </script>
 </html>

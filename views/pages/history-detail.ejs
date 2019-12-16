@@ -109,7 +109,13 @@
                 $("input[name=pumpInfo]").val(itemJSON.data[0].pump);
 
                 if (itemJSON.data[0].data) {
-                    $("textarea[name=rawData]").val(itemJSON.data[0].data.toSource());
+                    let source = "";
+
+                    for (let data of itemJSON.data[0].data) {
+                        source += `[${data[0]},${data[1]},${data[2]}]`;
+                    }
+                    
+                    $("textarea[name=rawData]").val(source);
                 }
                 
                 debug ? $("textarea[name=rawData]").parent().parent().show() : false;
