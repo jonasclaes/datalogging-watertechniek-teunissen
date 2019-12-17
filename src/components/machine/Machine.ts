@@ -89,7 +89,7 @@ export class Machine extends EventEmitter {
             this.currentReadingBuffer = [];
 
             // Wait until the start command has been given from the PLC.
-            await this.plc.addItemTimer("start", true, 250);
+            await this.plc.addItemTimer("start", true, 100);
             this.status = EStatus.RUNNING;
             this.reportStatus(this.status);
 
@@ -118,7 +118,7 @@ export class Machine extends EventEmitter {
 
                     // Check if values have changed.
                     if (items["measuredPressure"] !== prevValues.pressure && items["measuredFlow"] !== prevValues.flowrate) {
-                        prevValues.pressure = items["measuredPressure"] >= 0 ? items["measuredPressure"] : 0;
+                        prevValues.pressure = items["measuredPressure"];
                         prevValues.flowrate = items["measuredFlow"];
                         this.reportReading(prevValues);
 
@@ -195,11 +195,13 @@ export class Machine extends EventEmitter {
         // Field 1: flow
         // Field 2: pressure
         const runData = await history.readbyId(id);
-        let csvString = "datapoint,flow,pressure\n";
+        let csvString = "datapoint;pressure;flow;\n";
 
         // Add run results to CSV.
         for (let run of runData[0].data) {
-            csvString += `${run[0]},${run[1]},${run[2]}\n`;
+            let pressure = Math.round(run[1] * 1000) / 1000;
+            let flow = Math.round(run[2] * 1000) / 1000;
+            csvString += `${run[0]};${pressure};${flow};\n`;
         }
 
         // Standardize string for saving.

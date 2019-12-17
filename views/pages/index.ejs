@@ -152,19 +152,19 @@
                 $("#pageStart").hide();
                 $("#pageWorking").show();
 
-                setWorkingContents("Wachten op machine start...", "De software is aan het wachten op een startcommando van de machine.");
+                setWorkingContents("Wachten op meting start...", "De software is aan het wachten op een startcommando van de machine.");
             }
 
             // Machine has started, working now.
             if (status === "RUNNING") {
                 $("#pageWorking").show();
-                setWorkingContents("Machine in bedrijf...", "De software haalt nu realtime gegevens op van de machine, even geduld alstublieft.");
+                setWorkingContents("Meting loopt...", "De software haalt nu realtime gegevens op van de machine, even geduld alstublieft.");
             }
 
             // Machine is finishing.
             if (status === "FINISHING") {
                 $("#pageWorking").show();
-                setWorkingContents("Machine is klaar.", "De software heeft een stopcommando ontvangen, deze run wordt nu verwerkt en opgeslagen. Even geduld alstublieft.");
+                setWorkingContents("Meting is klaar.", "De software heeft een stopcommando ontvangen, deze run wordt nu verwerkt en opgeslagen. Even geduld alstublieft.");
                 
                 saveRun();
             }
