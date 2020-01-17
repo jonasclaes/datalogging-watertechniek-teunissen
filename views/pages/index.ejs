@@ -208,6 +208,11 @@
             debug ? console.debug("[USER] Start run form submitted.") : false;
 
             data.name = $("input[name=testName]").val();
+			
+			if (data.name == "") {
+				data.name = "Test " + Math.round(Math.random() * 1000000000);
+			}
+			
             data.date = new Date();
             data.client = $("input[name=clientName]").val();
             data.pump = $("input[name=pumpInfo]").val();

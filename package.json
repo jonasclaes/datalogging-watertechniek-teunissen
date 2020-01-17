@@ -1,6 +1,6 @@
 {
   "name": "datalogging-watertechniek-teunissen",
-  "version": "1.0.0",
+  "version": "2.1.8",
   "description": "Datalogger",
   "main": "./dist/server.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "start": "node ./dist/server.js"
   },
   "author": "Jonas Claes <jonasclaes2001@outlook.com>",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "compression": "^1.7.4",
     "dotenv": "^8.2.0",
